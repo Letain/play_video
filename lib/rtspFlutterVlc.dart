@@ -14,7 +14,6 @@ class FlutterVlcPlayerApp extends StatelessWidget {
   }
 }
 
-
 class VlcPlayerWidget extends StatefulWidget {
   const VlcPlayerWidget({Key? key}) : super(key: key);
 
@@ -32,8 +31,8 @@ class _VlcPlayerWidget extends State<VlcPlayerWidget> {
     super.initState();
 
     _player = VlcPlayerController.network(
-      // 'https://media.w3.org/2010/05/sintel/trailer.mp4',
-      'rtsp://root:secom000@192.168.1.86:554/live1s1.sdp',
+      'https://media.w3.org/2010/05/sintel/trailer.mp4',
+      // 'rtsp://root:secom000@192.168.1.86:554/live1s1.sdp',
       hwAcc: HwAcc.full,
       autoPlay: true,
       options: VlcPlayerOptions(rtp: VlcRtpOptions([VlcRtpOptions.rtpOverRtsp(true)])),

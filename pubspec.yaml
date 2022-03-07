@@ -39,7 +39,8 @@ dependencies:
   flutter_vlc_player: ^7.0.1
 
   fijkplayer: ^0.10.1
-  fijkplayer_skin: ^2.2.8
+#  fijkplayer_skin: ^2.2.8
+  wakelock: ^0.5.2
 
 dev_dependencies:
   flutter_test:

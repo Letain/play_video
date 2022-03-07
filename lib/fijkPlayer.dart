@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fijkplayer/fijkplayer.dart';
-import 'package:fijkplayer_skin/fijkplayer_skin.dart';
-import 'package:fijkplayer_skin/schema.dart' show VideoSourceFormat;
+import 'myFijkplayerSkin/fijkplayer_skin.dart';
+import 'myFijkplayerSkin/schema.dart' show VideoSourceFormat;
 
 class MyHomePage extends StatefulWidget {
   MyHomePage({required this.title});
@@ -14,12 +14,13 @@ class MyHomePage extends StatefulWidget {
 
 
 class _MyHomePageState extends State<MyHomePage> {
-  final FijkPlayer player = FijkPlayer();
+  FijkPlayer player = FijkPlayer();
 
   int _curTabIdx = 0;
   int _curActiveIdx = 0;
   ShowConfigAbs vCfg = PlayerShowConfig();
 
+  final streamTextController = TextEditingController();
 
   Map<String, List<Map<String, dynamic>>> videoList = {
     "video": [
@@ -27,15 +28,15 @@ class _MyHomePageState extends State<MyHomePage> {
         "name": "Resource1",
         "list": [
           {
-            "url": "https://sample-videos.com/video123/flv/240/big_buck_bunny_240p_10mb.flv",
+            "url": "https://download.samplelib.com/mp4/sample-30s.mp4",
             "name": "Video1"
           },
           {
-            "url": "https://sample-videos.com/video123/flv/240/big_buck_bunny_240p_10mb.flv",
+            "url": "https://download.samplelib.com/mp4/sample-30s.mp4",
             "name": "Video2"
           },
           {
-            "url": "https://sample-videos.com/video123/flv/240/big_buck_bunny_240p_10mb.flv",
+            "url": "https://download.samplelib.com/mp4/sample-30s.mp4",
             "name": "Video3"
           }
         ]
@@ -44,15 +45,15 @@ class _MyHomePageState extends State<MyHomePage> {
         "name": "Resource2",
         "list": [
           {
-            "url": "https://sample-videos.com/video123/flv/240/big_buck_bunny_240p_10mb.flv",
+            "url": "https://download.samplelib.com/mp4/sample-30s.mp4",
             "name": "Video1"
           },
           {
-            "url": "https://sample-videos.com/video123/flv/240/big_buck_bunny_240p_10mb.flv",
+            "url": "https://download.samplelib.com/mp4/sample-30s.mp4",
             "name": "Video2"
           },
           {
-            "url": "https://sample-videos.com/video123/flv/240/big_buck_bunny_240p_10mb.flv",
+            "url": "https://download.samplelib.com/mp4/sample-30s.mp4",
             "name": "Video3"
           }
         ]
@@ -86,45 +87,83 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Container(
+    return Container(
         alignment: Alignment.center,
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: FijkView(player: player,
-          height: 260,
-          color: Colors.black,
-          fit: FijkFit.cover,
-          panelBuilder: (
-              FijkPlayer player,
-              FijkData data,
-              BuildContext context,
-              Size viewSize,
-              Rect texturePos,
-          ){
-            return CustomFijkPanel(
-              player: player,
-              pageContent: context,
-              viewSize: viewSize,
-              texturePos: texturePos,
-              playerTitle: "Title",
-              onChangeVideo: onChangeVideo,
-              curTabIdx: _curTabIdx,
-              curActiveIdx: _curActiveIdx,
-              showConfig: vCfg,
-              videoFormat: _videoSourceTabs,
-            );
-          },
-        ),
-      ),
+        child: SingleChildScrollView(
+            child: Column(
+              children: [
+                Container(
+                  alignment: Alignment.center,
+                  child: FijkView(player: player,
+                    height: 260,
+                    color: Colors.black,
+                    fit: FijkFit.cover,
+                    panelBuilder: (FijkPlayer player,
+                        FijkData data,
+                        BuildContext context,
+                        Size viewSize,
+                        Rect texturePos,) {
+                      return CustomFijkPanel(
+                        player: player,
+                        pageContent: context,
+                        viewSize: viewSize,
+                        texturePos: texturePos,
+                        playerTitle: "Title",
+                        onChangeVideo: onChangeVideo,
+                        curTabIdx: _curTabIdx,
+                        curActiveIdx: _curActiveIdx,
+                        showConfig: vCfg,
+                        videoFormat: _videoSourceTabs,
+                      );
+                    },
+                  ),
+                ),
+                Padding(
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 16.0, horizontal: 8.0),
+                    child: TextField(
+                      maxLines: 1,
+                      keyboardType: TextInputType.text,
+                      decoration: const InputDecoration(
+                          border: UnderlineInputBorder(),
+                          labelText: 'Input a stream address'
+                      ),
+                      controller: streamTextController,
+                    )
+                ),
+                TextButton(
+                  onPressed: () {
+                    setState(() {
+                       player.release();
+                      player = FijkPlayer();
+                      // player.prepareAsync();
+
+                      videoList = {
+                        "video": [
+                          {
+                            "name": "Resource1",
+                            "list": [
+                              {
+                                "url": streamTextController.text,
+                                "name": "Video1"
+                              }
+                            ]
+                          }
+                        ]
+                      };
+                      _videoSourceTabs = VideoSourceFormat.fromJson(videoList);
+                      _curTabIdx = 0;
+                      _curActiveIdx = 0;
+                      speed = 1.0;
+                    });
+                  },
+                  child: const Text('Play the stream'),
+                )
+              ],
+            )
+        )
     );
   }
 }
