@@ -111,12 +111,12 @@ class _CustomFijkPanelState extends State<CustomFijkPanel>
     );
     // init animation
     _animation = Tween(
-      begin: Offset(1, 0),
+      begin: const Offset(1, 0),
       end: Offset.zero,
     ).animate(_animationController!);
     // is not null
-    if (_videoSourceTabs.video!.length < 1) return null;
-    // init plater state
+    if (_videoSourceTabs.video!.isEmpty) return;
+    // init player state
     setState(() {
       _playerState = player.value.state;
     });
@@ -126,8 +126,8 @@ class _CustomFijkPanelState extends State<CustomFijkPanel>
       });
     }
     // is not null
-    if (_videoSourceTabs.video!.length < 1) return null;
-    // autoplay and existurl
+    if (_videoSourceTabs.video!.isEmpty) return;
+    // autoplay and exist url
     if (showConfig.isAutoPlay && !_isPlaying) {
       int curTabIdx = widget.curTabIdx;
       int curActiveIdx = widget.curActiveIdx;
@@ -173,7 +173,7 @@ class _CustomFijkPanelState extends State<CustomFijkPanel>
         _drawerState = state;
       });
     }
-    Future.delayed(Duration(milliseconds: 100), () {
+    Future.delayed(const Duration(milliseconds: 100), () {
       _animationController!.forward();
     });
   }
@@ -227,30 +227,28 @@ class _CustomFijkPanelState extends State<CustomFijkPanel>
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: _cancelAndRestartLockTimer,
-      child: Container(
-        child: AnimatedOpacity(
-          opacity: _hideLockStuff ? 0.0 : 0.7,
-          duration: Duration(milliseconds: 400),
-          child: Align(
-            alignment: Alignment.centerLeft,
-            child: Padding(
-              padding: EdgeInsets.only(
-                left: 20,
-                top: showConfig.stateAuto && !player.value.fullScreen
-                    ? barGap
-                    : 0,
-              ),
-              child: IconButton(
-                iconSize: 30,
-                onPressed: () {
-                  setState(() {
-                    _lockStuff = false;
-                    _hideLockStuff = true;
-                  });
-                },
-                icon: Icon(Icons.lock_open),
-                color: Colors.white,
-              ),
+      child: AnimatedOpacity(
+        opacity: _hideLockStuff ? 0.0 : 0.7,
+        duration: const Duration(milliseconds: 400),
+        child: Align(
+          alignment: Alignment.centerLeft,
+          child: Padding(
+            padding: EdgeInsets.only(
+              left: 20,
+              top: showConfig.stateAuto && !player.value.fullScreen
+                  ? barGap
+                  : 0,
+            ),
+            child: IconButton(
+              iconSize: 30,
+              onPressed: () {
+                setState(() {
+                  _lockStuff = false;
+                  _hideLockStuff = true;
+                });
+              },
+              icon: const Icon(Icons.lock_outline),
+              color: Colors.white,
             ),
           ),
         ),
@@ -264,8 +262,8 @@ class _CustomFijkPanelState extends State<CustomFijkPanel>
       height: barHeight,
       alignment: Alignment.centerLeft,
       child: IconButton(
-        icon: Icon(Icons.arrow_back),
-        padding: EdgeInsets.only(
+        icon: const Icon(Icons.arrow_back),
+        padding: const EdgeInsets.only(
           left: 10.0,
           right: 10.0,
         ),
@@ -277,7 +275,7 @@ class _CustomFijkPanelState extends State<CustomFijkPanel>
           if (widget.player.value.fullScreen) {
             player.exitFullScreen();
           } else {
-            if (widget.pageContent == null) return null;
+            if (widget.pageContent == null) return;
             player.stop();
             Navigator.pop(widget.pageContent!);
           }
@@ -302,14 +300,12 @@ class _CustomFijkPanelState extends State<CustomFijkPanel>
               },
             ),
           ),
-          Container(
-            child: SlideTransition(
-              position: _animation!,
-              child: Container(
-                height: window.physicalSize.height,
-                width: 320,
-                child: _buildPlayDrawer(),
-              ),
+          SlideTransition(
+            position: _animation!,
+            child: SizedBox(
+              height: window.physicalSize.height,
+              width: 320,
+              child: _buildPlayDrawer(),
             ),
           ),
         ],
@@ -320,25 +316,25 @@ class _CustomFijkPanelState extends State<CustomFijkPanel>
   // the resource group
   Widget _buildPlayDrawer() {
     return Scaffold(
-      backgroundColor: Color.fromRGBO(0, 0, 0, 0.4),
+      backgroundColor: const Color.fromRGBO(0, 0, 0, 0.4),
       appBar: AppBar(
-        backgroundColor: Color.fromRGBO(0, 0, 0, 0.5),
+        backgroundColor: const Color.fromRGBO(0, 0, 0, 0.5),
         automaticallyImplyLeading: false,
         elevation: 0.1,
         title: TabBar(
           labelColor: Colors.white,
-          labelStyle: TextStyle(
+          labelStyle: const TextStyle(
             color: Colors.white,
             fontSize: 14,
           ),
           unselectedLabelColor: Colors.white,
-          unselectedLabelStyle: TextStyle(
+          unselectedLabelStyle: const TextStyle(
             color: Colors.white,
             fontSize: 14,
           ),
           indicator: BoxDecoration(
             color: Colors.purple[700],
-            borderRadius: BorderRadius.all(Radius.circular(10)),
+            borderRadius: const BorderRadius.all(Radius.circular(10)),
           ),
           tabs:
           _videoSourceTabs.video!.map((e) => Tab(text: e!.name!)).toList(),
@@ -347,7 +343,7 @@ class _CustomFijkPanelState extends State<CustomFijkPanel>
         ),
       ),
       body: Container(
-        color: Color.fromRGBO(0, 0, 0, 0.5),
+        color: const Color.fromRGBO(0, 0, 0, 0.5),
         child: TabBarView(
           controller: _tabController,
           children: _createTabConList(),
@@ -365,7 +361,7 @@ class _CustomFijkPanelState extends State<CustomFijkPanel>
           .keys
           .map((int activeIdx) {
         return Padding(
-          padding: EdgeInsets.only(left: 5, right: 5),
+          padding: const EdgeInsets.only(left: 5, right: 5),
           child: ElevatedButton(
             style: ButtonStyle(
               shape: MaterialStateProperty.all(
@@ -419,7 +415,7 @@ class _CustomFijkPanelState extends State<CustomFijkPanel>
       color: bgColor,
       child: Stack(
         children: [
-          showConfig.topBar
+          showConfig.topBar && widget.player.value.fullScreen
               ? Positioned(
             left: 0,
             top: 0,
@@ -1013,10 +1009,10 @@ class _buildGestureDetectorState extends State<_buildGestureDetector> {
     return Ink(
       child: InkWell(
         onTap: () => cb(),
-        child: Container(
+        child: SizedBox(
           height: 30,
           child: Padding(
-            padding: EdgeInsets.only(left: 5, right: 5),
+            padding: const EdgeInsets.only(left: 5, right: 5),
             child: Icon(
               iconData,
               color: Colors.white,
@@ -1044,7 +1040,7 @@ class _buildGestureDetectorState extends State<_buildGestureDetector> {
     double curTimePro = (currentValue / duration) * 100;
     double curBottomProW = (curConWidth / 100) * curTimePro;
 
-    return Container(
+    return SizedBox(
       height: barHeight,
       child: Stack(
         children: [
@@ -1157,12 +1153,10 @@ class _buildGestureDetectorState extends State<_buildGestureDetector> {
 
                     // the total time
                     _duration.inMilliseconds == 0
-                        ? Container(
-                      child: const Text(
-                        "00:00",
-                        style: TextStyle(color: Colors.white),
-                      ),
-                    )
+                        ? const Text(
+                          "00:00",
+                          style: TextStyle(color: Colors.white),
+                        )
                         : Padding(
                       padding: const EdgeInsets.only(right: 5.0, left: 5),
                       child: Text(
@@ -1252,7 +1246,7 @@ class _buildGestureDetectorState extends State<_buildGestureDetector> {
               color: Colors.white70,
               child: Container(
                 color: Colors.blue,
-                width: curBottomProW is double ? curBottomProW : 0,
+                width: curBottomProW,
                 height: 4,
               ),
             )
@@ -1279,7 +1273,7 @@ class _buildGestureDetectorState extends State<_buildGestureDetector> {
         if (widget.player.value.fullScreen) {
           player.exitFullScreen();
         } else {
-          if (widget.pageContent == null) return null;
+          if (widget.pageContent == null) return;
           player.stop();
           Navigator.pop(widget.pageContent!);
         }
@@ -1307,21 +1301,19 @@ class _buildGestureDetectorState extends State<_buildGestureDetector> {
             ],
           ),
         ),
-        child: Container(
+        child: SizedBox(
           height: barHeight,
           child: Row(
             children: <Widget>[
               _buildTopBackBtn(),
               Expanded(
-                child: Container(
-                  child: Text(
-                    widget.playerTitle,
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 1,
-                    textAlign: TextAlign.left,
-                    style: const TextStyle(
-                      color: Colors.white,
-                    ),
+                child: Text(
+                  widget.playerTitle,
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                  textAlign: TextAlign.left,
+                  style: const TextStyle(
+                    color: Colors.white,
                   ),
                 ),
               )
@@ -1491,7 +1483,7 @@ class _buildGestureDetectorState extends State<_buildGestureDetector> {
         child: Column(
           children: <Widget>[
             // the controller in the player's top
-            showConfig.topBar
+            showConfig.topBar && widget.player.value.fullScreen
                 ? _buildTopBar()
                 : Container(
               height:
@@ -1557,7 +1549,7 @@ class _buildGestureDetectorState extends State<_buildGestureDetector> {
                             // change the lock icon and the player's state
                             widget.changeLockState(true);
                           },
-                          icon: const Icon(Icons.lock_outline),
+                          icon: const Icon(Icons.lock_open),
                           color: Colors.white,
                         ),
                       ),

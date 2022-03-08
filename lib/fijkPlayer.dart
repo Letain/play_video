@@ -87,82 +87,71 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  // build input area
+  Widget buildInputArea() {
+    return Column(
+      children: [
+        Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 8.0),
+            child: TextField(
+              maxLines: 1,
+              keyboardType: TextInputType.text,
+              decoration: const InputDecoration(
+                  border: UnderlineInputBorder(),
+                  labelText: 'Input a stream address'
+              ),
+              controller: streamTextController,
+            )
+        ),
+        TextButton(
+          onPressed: () async{
+            if (player.value.state == FijkState.completed) {
+              await player.stop();
+            }
+            await player.reset().then((_) async {
+              player.setDataSource(streamTextController.text, autoPlay: true);
+            });
+          },
+          child: const Text('Play the stream'),
+        )
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-        alignment: Alignment.center,
-        child: SingleChildScrollView(
-            child: Column(
-              children: [
-                Container(
-                  alignment: Alignment.center,
-                  child: FijkView(player: player,
-                    height: 260,
-                    color: Colors.black,
-                    fit: FijkFit.cover,
-                    panelBuilder: (FijkPlayer player,
-                        FijkData data,
-                        BuildContext context,
-                        Size viewSize,
-                        Rect texturePos,) {
-                      return CustomFijkPanel(
-                        player: player,
-                        pageContent: context,
-                        viewSize: viewSize,
-                        texturePos: texturePos,
-                        playerTitle: "Title",
-                        onChangeVideo: onChangeVideo,
-                        curTabIdx: _curTabIdx,
-                        curActiveIdx: _curActiveIdx,
-                        showConfig: vCfg,
-                        videoFormat: _videoSourceTabs,
-                      );
-                    },
-                  ),
-                ),
-                Padding(
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 16.0, horizontal: 8.0),
-                    child: TextField(
-                      maxLines: 1,
-                      keyboardType: TextInputType.text,
-                      decoration: const InputDecoration(
-                          border: UnderlineInputBorder(),
-                          labelText: 'Input a stream address'
-                      ),
-                      controller: streamTextController,
-                    )
-                ),
-                TextButton(
-                  onPressed: () {
-                    setState(() {
-                       player.release();
-                      player = FijkPlayer();
-                      // player.prepareAsync();
-
-                      videoList = {
-                        "video": [
-                          {
-                            "name": "Resource1",
-                            "list": [
-                              {
-                                "url": streamTextController.text,
-                                "name": "Video1"
-                              }
-                            ]
-                          }
-                        ]
-                      };
-                      _videoSourceTabs = VideoSourceFormat.fromJson(videoList);
-                      _curTabIdx = 0;
-                      _curActiveIdx = 0;
-                      speed = 1.0;
-                    });
-                  },
-                  child: const Text('Play the stream'),
-                )
-              ],
+    return SingleChildScrollView(
+        child: Column(
+          children: [
+            FijkView(
+              player: player,
+              height: 260,
+              color: Colors.black,
+              fit: FijkFit.cover,
+              panelBuilder: (FijkPlayer player,
+                  FijkData data,
+                  BuildContext context,
+                  Size viewSize,
+                  Rect texturePos,) {
+                return CustomFijkPanel(
+                  player: player,
+                  pageContent: context,
+                  viewSize: viewSize,
+                  texturePos: texturePos,
+                  playerTitle: "",
+                  onChangeVideo: onChangeVideo,
+                  curTabIdx: _curTabIdx,
+                  curActiveIdx: _curActiveIdx,
+                  showConfig: vCfg,
+                  videoFormat: _videoSourceTabs,
+                );
+              },
+            ),
+            SizedBox(
+              height: 300,
+              child: buildInputArea(),
             )
+          ],
         )
     );
   }
@@ -170,7 +159,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
 class PlayerShowConfig implements ShowConfigAbs {
   @override
-  bool drawerBtn = true;
+  bool drawerBtn = false;
   @override
   bool nextBtn = true;
   @override
