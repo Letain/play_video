@@ -78,6 +78,7 @@ class _MyHomePageState extends State<MyHomePage> {
   void dispose() {
     super.dispose();
     player.release();
+    streamTextController.dispose();
   }
 
   void onChangeVideo(int curTabIdx, int curActiveIdx) {
