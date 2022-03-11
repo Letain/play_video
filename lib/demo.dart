@@ -1,5 +1,10 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:fijkplayer/fijkplayer.dart';
+import 'package:http/http.dart' as http;
+
 import 'myFijkplayerSkin/fijkplayer_skin.dart';
 import 'myFijkplayerSkin/schema.dart' show VideoSourceFormat;
 
@@ -29,17 +34,22 @@ class _DemoPlayerState extends State<DemoPlayer> with TickerProviderStateMixin {
 
   late TabController _tabController;
 
+  Timer? _autoRefreshTimer;
+  String autoMessage = "";
+  http.Client client = http.Client();
+
   @override
   void initState() {
     super.initState();
 
     var video1 = VideoItem(
-        // url: "rtsp://root:secom000@192.168.1.86:554/live1s1.sdp", name: "Cam1");
+      // url: "rtsp://root:secom000@192.168.1.86:554/live1s1.sdp", name: "Cam1");
         url: "https://download.samplelib.com/mp4/sample-30s.mp4", name: "Cam1");
     var video2 = VideoItem(
-        // url: "rtsp://root:secom000@192.168.1.86:554/live1s2.sdp", name: "Cam2");
+      // url: "rtsp://root:secom000@192.168.1.86:554/live1s2.sdp", name: "Cam2");
         url: "https://download.samplelib.com/mp4/sample-5s.mp4", name: "Cam1");
-    var videoG = VideoGroup(name: "カメラ一覧", list: [video1.toJson(), video2.toJson()]);
+    var videoG = VideoGroup(
+        name: "カメラ一覧", list: [video1.toJson(), video2.toJson()]);
 
     videoList = {"video": [videoG.toJson()]};
 
@@ -52,6 +62,22 @@ class _DemoPlayerState extends State<DemoPlayer> with TickerProviderStateMixin {
     );
 
     speed = 1.0;
+
+    _autoRefreshTimer =
+        Timer.periodic(const Duration(seconds: 2), (timer) async {
+          try {
+            var response = await client.get(
+                Uri.parse('https://geek-jokes.sameerkumar.website/api'));
+            setState(() {
+              autoMessage = response.body;
+            });
+          }
+          finally {
+            if (kDebugMode) {
+              print('http request failed');
+            }
+          }
+        });
   }
 
   @override
@@ -59,6 +85,9 @@ class _DemoPlayerState extends State<DemoPlayer> with TickerProviderStateMixin {
     super.dispose();
     player.release();
     _tabController.dispose();
+
+    _autoRefreshTimer?.cancel();
+    client.close();
   }
 
   void onChangeVideo(int curTabIdx, int curActiveIdx) {
@@ -191,7 +220,7 @@ class _DemoPlayerState extends State<DemoPlayer> with TickerProviderStateMixin {
                   pageContent: context,
                   viewSize: viewSize,
                   texturePos: texturePos,
-                  playerTitle: "do some test here",
+                  playerTitle: "",
                   onChangeVideo: onChangeVideo,
                   curTabIdx: _curTabIdx,
                   curActiveIdx: _curActiveIdx,
@@ -204,9 +233,12 @@ class _DemoPlayerState extends State<DemoPlayer> with TickerProviderStateMixin {
               // alignment: Alignment.center,
               color: Colors.grey[300],
               height: 50,
-              width: MediaQuery.of(context).size.width,
+              width: MediaQuery
+                  .of(context)
+                  .size
+                  .width,
               child: Text(
-                '当前tabIdx : ${_curTabIdx.toString()} 当前activeIdx : ${_curActiveIdx.toString()}',
+                autoMessage,
                 style: const TextStyle(color: Colors.blue),
 
               ),

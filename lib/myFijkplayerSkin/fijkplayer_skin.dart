@@ -10,6 +10,7 @@ import 'package:fijkplayer/fijkplayer.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:wakelock/wakelock.dart';
+import 'package:http/http.dart' as http;
 
 import 'schema.dart' show VideoSourceFormat;
 import 'slider.dart' show NewFijkSliderColors, NewFijkSlider;
@@ -726,6 +727,10 @@ class _buildGestureDetectorState extends State<_buildGestureDetector> {
     "1.0": 1.0,
   };
 
+  Timer? _autoRefreshTimer;
+  String autoMessage = "";
+  http.Client client =  http.Client();
+
   // constructor
   _buildGestureDetectorState();
 
@@ -738,6 +743,22 @@ class _buildGestureDetectorState extends State<_buildGestureDetector> {
     });
     // timer for hiding the other parts beyond the video screen
     _startHideTimer();
+
+    _autoRefreshTimer = Timer.periodic(const Duration(seconds: 2), (timer) async{
+      if (widget.player.value.fullScreen && _hideStuff) {
+        try{
+          var response = await client.get(Uri.parse('https://geek-jokes.sameerkumar.website/api'));
+          setState(() {
+            autoMessage = response.body;
+          });
+        }
+        finally{
+          if(kDebugMode){
+            print('http request failed');
+          }
+        }
+      }
+    });
   }
 
   @override
@@ -749,6 +770,8 @@ class _buildGestureDetectorState extends State<_buildGestureDetector> {
     _currentPosSubs?.cancel();
     _bufferPosSubs?.cancel();
     _bufferingSubs?.cancel();
+    _autoRefreshTimer?.cancel();
+    client.close();
   }
 
   @override
@@ -1603,7 +1626,7 @@ class _buildGestureDetectorState extends State<_buildGestureDetector> {
               const SizedBox(width: 30,),
               Expanded(
                 child: Text(
-                  widget.playerTitle,
+                  autoMessage,
                   overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.left,
                   style: const TextStyle(

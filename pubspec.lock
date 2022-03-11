@@ -282,6 +282,13 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "0.15.0"
+  http:
+    dependency: "direct main"
+    description:
+      name: http
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "0.13.4"
   http_multi_server:
     dependency: transitive
     description:
