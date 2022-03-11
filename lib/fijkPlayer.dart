@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fijkplayer/fijkplayer.dart';
 import 'myFijkplayerSkin/fijkplayer_skin.dart';
 import 'myFijkplayerSkin/schema.dart' show VideoSourceFormat;
+import 'model/videoResourceModel.dart';
 
 class MyHomePage extends StatefulWidget {
   MyHomePage({required this.title});
@@ -22,44 +23,45 @@ class _MyHomePageState extends State<MyHomePage> {
 
   final streamTextController = TextEditingController();
 
-  Map<String, List<Map<String, dynamic>>> videoList = {
-    "video": [
-      {
-        "name": "Resource1",
-        "list": [
-          {
-            "url": "https://download.samplelib.com/mp4/sample-30s.mp4",
-            "name": "Video1"
-          },
-          {
-            "url": "https://download.samplelib.com/mp4/sample-30s.mp4",
-            "name": "Video2"
-          },
-          {
-            "url": "https://download.samplelib.com/mp4/sample-30s.mp4",
-            "name": "Video3"
-          }
-        ]
-      },
-      {
-        "name": "Resource2",
-        "list": [
-          {
-            "url": "https://download.samplelib.com/mp4/sample-30s.mp4",
-            "name": "Video1"
-          },
-          {
-            "url": "https://download.samplelib.com/mp4/sample-30s.mp4",
-            "name": "Video2"
-          },
-          {
-            "url": "https://download.samplelib.com/mp4/sample-30s.mp4",
-            "name": "Video3"
-          }
-        ]
-      },
-    ]
-  };
+  late Map<String, List<Map<String, dynamic>>> videoList;
+  // = {
+  //   "video": [
+  //     {
+  //       "name": "Resource1",
+  //       "list": [
+  //         {
+  //           "url": "https://download.samplelib.com/mp4/sample-30s.mp4",
+  //           "name": "Video1"
+  //         },
+  //         {
+  //           "url": "https://download.samplelib.com/mp4/sample-30s.mp4",
+  //           "name": "Video2"
+  //         },
+  //         {
+  //           "url": "https://download.samplelib.com/mp4/sample-30s.mp4",
+  //           "name": "Video3"
+  //         }
+  //       ]
+  //     },
+  //     {
+  //       "name": "Resource2",
+  //       "list": [
+  //         {
+  //           "url": "https://download.samplelib.com/mp4/sample-30s.mp4",
+  //           "name": "Video1"
+  //         },
+  //         {
+  //           "url": "https://download.samplelib.com/mp4/sample-30s.mp4",
+  //           "name": "Video2"
+  //         },
+  //         {
+  //           "url": "https://download.samplelib.com/mp4/sample-30s.mp4",
+  //           "name": "Video3"
+  //         }
+  //       ]
+  //     },
+  //   ]
+  // };
 
   VideoSourceFormat? _videoSourceTabs;
 
@@ -69,6 +71,19 @@ class _MyHomePageState extends State<MyHomePage> {
     // player.setDataSource(
     //     "https://sample-videos.com/video123/flv/240/big_buck_bunny_240p_10mb.flv",
     //     autoPlay: true);
+
+    var video11 = VideoItem(url: "https://download.samplelib.com/mp4/sample-30s.mp4", name: "Video1");
+    var video12 = VideoItem(url: "https://download.samplelib.com/mp4/sample-30s.mp4", name: "Video2");
+    var video13 = VideoItem(url: "https://download.samplelib.com/mp4/sample-30s.mp4", name: "Video3");
+    var videoG1 = VideoGroup(name: "Resource1", list: [video11.toJson(), video12.toJson(), video13.toJson()]);
+
+
+    var video21 = VideoItem(url: "https://download.samplelib.com/mp4/sample-30s.mp4", name: "Video1");
+    var video22 = VideoItem(url: "https://download.samplelib.com/mp4/sample-30s.mp4", name: "Video2");
+    var video23 = VideoItem(url: "https://download.samplelib.com/mp4/sample-30s.mp4", name: "Video3");
+    var videoG2 = VideoGroup(name: "Resource2", list: [video21.toJson(), video22.toJson(), video23.toJson()]);
+
+    videoList = {"video": [videoG1.toJson(), videoG2.toJson()]};
 
     _videoSourceTabs = VideoSourceFormat.fromJson(videoList);
     speed = 1.0;

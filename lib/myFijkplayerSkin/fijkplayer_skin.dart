@@ -674,7 +674,9 @@ class _buildGestureDetector extends StatefulWidget {
 
 class _buildGestureDetectorState extends State<_buildGestureDetector> {
   FijkPlayer get player => widget.player;
+
   ShowConfigAbs get showConfig => widget.showConfig;
+
   VideoSourceFormat get _videoSourceTabs => widget.videoFormat!;
 
   Duration _duration = Duration();
@@ -795,10 +797,14 @@ class _buildGestureDetectorState extends State<_buildGestureDetector> {
       });
     }
     if (kDebugMode) {
-      print('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++');
-      print('++++++++ Play started? => ${value.state == FijkState.started} ++++++++');
-      print('+++++++++++++++++++ The player\'s state => ${value.state} ++++++++++++++++++++');
-      print('++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++');
+      print(
+          '++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++');
+      print('++++++++ Play started? => ${value.state ==
+          FijkState.started} ++++++++');
+      print('+++++++++++++++++++ The player\'s state => ${value
+          .state} ++++++++++++++++++++');
+      print(
+          '++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++');
     }
     // new state
     bool playing = value.state == FijkState.started;
@@ -844,14 +850,18 @@ class _buildGestureDetectorState extends State<_buildGestureDetector> {
 
     // calculate the percent of the dragged length of the screen
     int newInterval = pdx - cdx;
-    double playerW = MediaQuery.of(context).size.width;
+    double playerW = MediaQuery
+        .of(context)
+        .size
+        .width;
     int curIntervalAbs = newInterval.abs();
     double movePropCheck = (curIntervalAbs / playerW) * 100;
 
     // calculate the progress bar's percent
     double durProgCheck = _duration.inMilliseconds.toDouble() / 100;
     int checkTransfrom = (movePropCheck * durProgCheck).toInt();
-    int dragRange = isBefore ? updatePosX! + checkTransfrom : updatePosX! - checkTransfrom;
+    int dragRange = isBefore ? updatePosX! + checkTransfrom : updatePosX! -
+        checkTransfrom;
 
     // check if is the destination out of range, when is, set to the end
     int lastSecond = _duration.inMilliseconds;
@@ -926,7 +936,8 @@ class _buildGestureDetectorState extends State<_buildGestureDetector> {
     // if the drag value less than 3, nothing happens
     if (isBefore && pdy - cdy < 3 || !isBefore && cdy - pdy < 3) return null;
     // calculate the position
-    double dragRange = isBefore ? updateDargVarVal! + 0.03 : updateDargVarVal! - 0.03;
+    double dragRange = isBefore ? updateDargVarVal! + 0.03 : updateDargVarVal! -
+        0.03;
     // is out of range?
     if (dragRange > 1) {
       dragRange = 1.0;
@@ -1036,7 +1047,10 @@ class _buildGestureDetectorState extends State<_buildGestureDetector> {
     currentValue = max(currentValue, 0);
 
     // calculate the bottom progress bar position
-    double curConWidth = MediaQuery.of(context).size.width;
+    double curConWidth = MediaQuery
+        .of(context)
+        .size
+        .width;
     double curTimePro = (currentValue / duration) * 100;
     double curBottomProW = (curConWidth / 100) * curTimePro;
 
@@ -1078,8 +1092,8 @@ class _buildGestureDetectorState extends State<_buildGestureDetector> {
                       Icons.skip_next,
                           () {
                         bool isOverFlow = widget.curActiveIdx + 1 >=
-                            _videoSourceTabs
-                                .video![widget.curTabIdx]!.list!.length;
+                            _videoSourceTabs.video![widget.curTabIdx]!.list!
+                                .length;
                         // video is available
                         if (!isOverFlow) {
                           int newTabIdx = widget.curTabIdx;
@@ -1154,9 +1168,9 @@ class _buildGestureDetectorState extends State<_buildGestureDetector> {
                     // the total time
                     _duration.inMilliseconds == 0
                         ? const Text(
-                          "00:00",
-                          style: TextStyle(color: Colors.white),
-                        )
+                      "00:00",
+                      style: TextStyle(color: Colors.white),
+                    )
                         : Padding(
                       padding: const EdgeInsets.only(right: 5.0, left: 5),
                       child: Text(
@@ -1430,7 +1444,7 @@ class _buildGestureDetectorState extends State<_buildGestureDetector> {
         Ink(
           child: InkWell(
             onTap: () {
-              if (_speed == speedVals) return null;
+              if (_speed == speedVals) return;
               setState(() {
                 _speed = speed = speedVals;
                 _hideSpeedStu = true;
@@ -1559,6 +1573,7 @@ class _buildGestureDetectorState extends State<_buildGestureDetector> {
                 ],
               ),
             ),
+            _buildMessageArea(),
             // bottom play controllers
             _buildBottomBar(context),
           ],
@@ -1570,5 +1585,39 @@ class _buildGestureDetectorState extends State<_buildGestureDetector> {
   @override
   Widget build(BuildContext context) {
     return _buildGestureDetector();
+  }
+
+  //  the message to display up on video
+  Widget _buildMessageArea() {
+    return widget.player.value.fullScreen ?
+    AnimatedOpacity(
+      opacity: _hideStuff ? 0.8 : 0.0,
+      duration: const Duration(milliseconds: 400),
+      child: Container(
+        height: barHeight,
+        alignment: Alignment.bottomLeft,
+        child: SizedBox(
+          height: barHeight,
+          child: Row(
+            children: [
+              const SizedBox(width: 30,),
+              Expanded(
+                child: Text(
+                  widget.playerTitle,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.left,
+                  style: const TextStyle(
+                      color: Colors.blueAccent,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold
+                  ),
+                ),
+              )
+            ],
+          ),
+        ),
+      ),
+    ) :
+    Container();
   }
 }

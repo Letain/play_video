@@ -3,6 +3,8 @@ import 'package:fijkplayer/fijkplayer.dart';
 import 'myFijkplayerSkin/fijkplayer_skin.dart';
 import 'myFijkplayerSkin/schema.dart' show VideoSourceFormat;
 
+import 'model/videoResourceModel.dart';
+
 class RtspFijkPlayer extends StatefulWidget {
   RtspFijkPlayer({required this.title});
 
@@ -18,19 +20,7 @@ class _RtspFijkPlayerState extends State<RtspFijkPlayer> {
 
   final streamTextController = TextEditingController();
 
-  Map<String, List<Map<String, dynamic>>> videoList = {
-    "video": [
-      {
-        "name": "Resource1",
-        "list": [
-          {
-            "url": "rtsp://root:secom000@192.168.1.86:554/live1s1.sdp",
-            "name": "Video1"
-          }
-        ]
-      }
-    ]
-  };
+  late Map<String, List<Map<String, dynamic>>> videoList;
 
   VideoSourceFormat? _videoSourceTabs;
 
@@ -45,6 +35,14 @@ class _RtspFijkPlayerState extends State<RtspFijkPlayer> {
     // player.setDataSource(
     //     "https://sample-videos.com/video123/flv/240/big_buck_bunny_240p_10mb.flv",
     //     autoPlay: true);
+
+
+    var video1 = VideoItem(url: "rtsp://root:secom000@192.168.1.86:554/live1s1.sdp", name: "Cam1");
+    var video2 = VideoItem(url: "rtsp://root:secom000@192.168.1.86:554/live1s2.sdp", name: "Cam2");
+    var videoG = VideoGroup(name: "Camera List", list: [video1.toJson(), video2.toJson()]);
+
+    videoList = {"video": [videoG.toJson()]};
+
     player.setOption(FijkOption.formatCategory, "rtsp_transport", "tcp");
     _videoSourceTabs = VideoSourceFormat.fromJson(videoList);
     speed = 1.0;
