@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'demoInput.dart';
 import 'playLocal.dart';
 import 'fijkPlayer.dart';
 import 'rtspFijkPlayer.dart';
@@ -101,18 +102,19 @@ class TopScreen extends StatelessWidget{
 
   void _playDemo(BuildContext context){
     Navigator.push(context, MaterialPageRoute(builder: (BuildContext context){
-      return Scaffold(
-        appBar: AppBar(
-          title: const Text('Demo'),
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: (){
-              Navigator.pop(context);
-            },
-          ),
-        ),
-        body: DemoPlayer(title: 'Demo',),
-      );
+      // return Scaffold(
+      //   appBar: AppBar(
+      //     title: const Text('Demo'),
+      //     leading: IconButton(
+      //       icon: const Icon(Icons.arrow_back),
+      //       onPressed: (){
+      //         Navigator.pop(context);
+      //       },
+      //     ),
+      //   ),
+      //   body: DemoPlayer(title: 'Demo',),
+      // );
+      return CameraParameterInputWidget();
     }));
   }
 }

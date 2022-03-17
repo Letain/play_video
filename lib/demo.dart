@@ -5,15 +5,17 @@ import 'package:flutter/material.dart';
 import 'package:fijkplayer/fijkplayer.dart';
 import 'package:http/http.dart' as http;
 
+import 'dto/demoNavigatorParameter.dart';
 import 'myFijkplayerSkin/fijkplayer_skin.dart';
 import 'myFijkplayerSkin/schema.dart' show VideoSourceFormat;
 
 import 'model/videoResourceModel.dart';
 
 class DemoPlayer extends StatefulWidget {
-  DemoPlayer({required this.title});
+  DemoPlayer({required this.title, this.parameter});
 
   final String title;
+  final DemoNavigatorParameter? parameter;
 
   @override
   _DemoPlayerState createState() => _DemoPlayerState();
@@ -38,21 +40,45 @@ class _DemoPlayerState extends State<DemoPlayer> with TickerProviderStateMixin {
   String autoMessage = "";
   http.Client client = http.Client();
 
-  @override
-  void initState() {
-    super.initState();
-
+  Map<String, dynamic> demoList() {
     var video1 = VideoItem(
       // url: "rtsp://root:secom000@192.168.1.86:554/live1s1.sdp", name: "Cam1");
-        url: "https://download.samplelib.com/mp4/sample-30s.mp4", name: "Cam1");
+        url: "https://download.samplelib.com/mp4/sample-30s.mp4",
+        name: "Cam1");
     var video2 = VideoItem(
       // url: "rtsp://root:secom000@192.168.1.86:554/live1s2.sdp", name: "Cam2");
         url: "https://download.samplelib.com/mp4/sample-5s.mp4", name: "Cam1");
     var videoG = VideoGroup(
         name: "カメラ一覧", list: [video1.toJson(), video2.toJson()]);
 
-    videoList = {"video": [videoG.toJson()]};
+    return videoG.toJson();
+  }
 
+  @override
+  void initState() {
+    super.initState();
+
+    if(widget.parameter != null
+        && widget.parameter?.cameraListUrl != null) {
+      try {
+        // todo camera list logic
+        // maybe future builder
+        // var response = await client.get(
+        //     Uri.parse(widget.parameter!.cameraListUrl!));
+        // still demo
+        videoList = {"video": [demoList()]};
+      }
+      finally {
+        // demo list
+        videoList = {"video": [demoList()]};
+        if (kDebugMode) {
+          print('http request failed');
+        }
+      }
+    }
+    else {
+      videoList = {"video": [demoList()]};
+    }
     player.setOption(FijkOption.formatCategory, "rtsp_transport", "tcp");
     _videoSourceTabs = VideoSourceFormat.fromJson(videoList);
 
@@ -97,7 +123,7 @@ class _DemoPlayerState extends State<DemoPlayer> with TickerProviderStateMixin {
     });
   }
 
-  // build 剧集
+  // build
   Widget buildPlayDrawer() {
     return Scaffold(
       appBar: PreferredSize(
