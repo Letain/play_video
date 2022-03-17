@@ -11,19 +11,23 @@ class VideoSourceFormatVideoList {
 
   String? url;
   String? name;
+  String? address;
 
   VideoSourceFormatVideoList({
     this.url,
     this.name,
+    this.address,
   });
   VideoSourceFormatVideoList.fromJson(Map<String, dynamic> json) {
     url = json["url"]?.toString();
     name = json["name"]?.toString();
+    address = json["address"]?.toString();
   }
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = Map<String, dynamic>();
+    final Map<String, dynamic> data = <String, dynamic>{};
     data["url"] = url;
     data["name"] = name;
+    data["address"] = address;
     return data;
   }
 }
@@ -60,7 +64,7 @@ class VideoSourceFormatVideo {
     }
   }
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = Map<String, dynamic>();
+    final Map<String, dynamic> data = <String, dynamic>{};
     data["name"] = name;
     if (list != null) {
       final v = list;

@@ -11,6 +11,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:wakelock/wakelock.dart';
 import 'package:http/http.dart' as http;
+import 'package:web_socket_channel/io.dart';
 
 import 'schema.dart' show VideoSourceFormat;
 import 'slider.dart' show NewFijkSliderColors, NewFijkSlider;
@@ -63,6 +64,7 @@ class CustomFijkPanel extends StatefulWidget {
   final int curActiveIdx;
   final ShowConfigAbs showConfig;
   final VideoSourceFormat? videoFormat;
+  String autoMessageUrl;
 
   CustomFijkPanel({
     required this.player,
@@ -75,6 +77,7 @@ class CustomFijkPanel extends StatefulWidget {
     required this.videoFormat,
     required this.curTabIdx,
     required this.curActiveIdx,
+    this.autoMessageUrl = ""
   });
 
   @override
@@ -193,6 +196,11 @@ class _CustomFijkPanelState extends State<CustomFijkPanel>
   // switch the resource
   Future<void> changeCurPlayVideo(int tabIdx, int activeIdx) async {
     // await player.stop();
+
+    if(_videoSourceTabs.video == null || _videoSourceTabs.video!.isEmpty || _videoSourceTabs.video![0]!.list!.isEmpty) {
+      return;
+    }
+
     await player.reset().then((_) {
       String curTabActiveUrl =
       _videoSourceTabs.video![tabIdx]!.list![activeIdx]!.url!;
@@ -382,11 +390,23 @@ class _CustomFijkPanelState extends State<CustomFijkPanel>
               // switch the resource
               changeCurPlayVideo(newTabIdx, newActiveIdx);
             },
-            child: Text(
-              _videoSourceTabs.video![tabIdx]!.list![activeIdx]!.name!,
-              style: const TextStyle(
-                color: Colors.white,
-              ),
+            child: Column(
+              children: [
+                Text(
+                  _videoSourceTabs.video![tabIdx]!.list![activeIdx]!.name!,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Colors.white,
+                  ),
+                ),
+                Text(
+                  _videoSourceTabs.video![tabIdx]!.list![activeIdx]!.address!,
+                  style: const TextStyle(
+                    fontSize: 10,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
             ),
           ),
         );
@@ -617,6 +637,7 @@ class _CustomFijkPanelState extends State<CustomFijkPanel>
             videoFormat: widget.videoFormat,
             changeDrawerState: changeDrawerState,
             changeLockState: changeLockState,
+            autoMessageUrl: widget.autoMessageUrl,
           ),
         );
       }
@@ -653,6 +674,7 @@ class _buildGestureDetector extends StatefulWidget {
   final Function changeLockState;
   final ShowConfigAbs showConfig;
   final VideoSourceFormat? videoFormat;
+  String autoMessageUrl;
   _buildGestureDetector({
     Key? key,
     required this.player,
@@ -667,6 +689,7 @@ class _buildGestureDetector extends StatefulWidget {
     required this.videoFormat,
     required this.changeDrawerState,
     required this.changeLockState,
+    this.autoMessageUrl = ""
   }) : super(key: key);
 
   @override
@@ -727,12 +750,32 @@ class _buildGestureDetectorState extends State<_buildGestureDetector> {
     "1.0": 1.0,
   };
 
-  Timer? _autoRefreshTimer;
   String autoMessage = "";
   http.Client client =  http.Client();
 
   // constructor
   _buildGestureDetectorState();
+
+  void initMessageChannel(String autoMessageUrl){
+    try {
+      if (widget.player.value.fullScreen) {
+        var channel = IOWebSocketChannel.connect(Uri.parse(autoMessageUrl));
+        channel.stream.listen((message) {
+          if (widget.player.value.fullScreen && _hideStuff) {
+            setState(() {
+              autoMessage = message;
+            });
+          }
+        });
+      }
+    }
+    finally {
+      if (kDebugMode) {
+        print('http request failed');
+      }
+    }
+    // });
+  }
 
   void initEvent() {
     // init, will execute when enter or quit full screen
@@ -744,21 +787,10 @@ class _buildGestureDetectorState extends State<_buildGestureDetector> {
     // timer for hiding the other parts beyond the video screen
     _startHideTimer();
 
-    _autoRefreshTimer = Timer.periodic(const Duration(seconds: 2), (timer) async{
-      if (widget.player.value.fullScreen && _hideStuff) {
-        try{
-          var response = await client.get(Uri.parse('https://geek-jokes.sameerkumar.website/api'));
-          setState(() {
-            autoMessage = response.body;
-          });
-        }
-        finally{
-          if(kDebugMode){
-            print('http request failed');
-          }
-        }
-      }
-    });
+    // listen on web socket message
+    if(widget.autoMessageUrl != ""){
+      initMessageChannel(widget.autoMessageUrl);
+    }
   }
 
   @override
@@ -770,7 +802,6 @@ class _buildGestureDetectorState extends State<_buildGestureDetector> {
     _currentPosSubs?.cancel();
     _bufferPosSubs?.cancel();
     _bufferingSubs?.cancel();
-    _autoRefreshTimer?.cancel();
     client.close();
   }
 

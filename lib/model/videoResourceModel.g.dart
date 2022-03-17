@@ -22,9 +22,11 @@ Map<String, dynamic> _$VideoGroupToJson(VideoGroup instance) =>
 VideoItem _$VideoItemFromJson(Map<String, dynamic> json) => VideoItem(
       url: json['url'] as String,
       name: json['name'] as String,
+      address: json['address'] as String?,
     );
 
 Map<String, dynamic> _$VideoItemToJson(VideoItem instance) => <String, dynamic>{
       'url': instance.url,
       'name': instance.name,
+      'address': instance.address,
     };

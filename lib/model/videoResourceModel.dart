@@ -26,8 +26,9 @@ class VideoGroup {
 class VideoItem {
   final String url;
   final String name;
+  String? address;
 
-  VideoItem({required this.url, required this.name});
+  VideoItem({required this.url, required this.name, this.address});
   factory VideoItem.fromJson(Map<String, dynamic> srcJson) => _$VideoItemFromJson(srcJson);
   Map<String, dynamic> toJson() => _$VideoItemToJson(this);
 }

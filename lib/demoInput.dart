@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import 'demo.dart';
@@ -38,22 +39,38 @@ class _CameraParameterInputWidgetState extends State<CameraParameterInputWidget>
       ),
       body: Column(
         children: [
-          const Text("Camera List Get Url(Optional)"),
-          TextField(
-            maxLines: 1,
-            controller: textController1,
-          ),
-          const Text("Person Info Get Url(Optional)"),
-          TextField(
-            maxLines: 1,
-            controller: textController2,
-          ),
-          TextButton(
-              onPressed: () {
-                _playDemo(context);
-              },
-              child: const Text("Play")
-          )
+          const Padding(padding: EdgeInsets.symmetric(vertical: 10)),
+          const Text("Camera List Get Url"),
+          Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 15),
+              child:
+              TextField(
+                maxLines: 1,
+                controller: textController1,
+              )),
+          // const Text("Person Info Get Url(Optional)"),
+          // TextField(
+          //   maxLines: 1,
+          //   controller: textController2,
+          // ),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 15),
+            child: TextButton(
+                style: ButtonStyle(
+                  shape: MaterialStateProperty.all(
+                    RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(5),
+                    ),
+                  ),
+                  elevation: MaterialStateProperty.all(0),
+                  backgroundColor: MaterialStateProperty.all(Colors.lightBlue),
+                ),
+                onPressed: () {
+                  _playDemo(context);
+                },
+
+                child: const Text("Play", style: TextStyle(fontSize: 26, color: Colors.white),)
+            ),)
         ],
       ),
     );
@@ -71,7 +88,7 @@ class _CameraParameterInputWidgetState extends State<CameraParameterInputWidget>
             },
           ),
         ),
-        body: DemoPlayer(title: 'Demo', parameter: DemoNavigatorParameter(cameraListUrl: textController1.text, cameraPersonInfoUrl: textController2.text) ),
+        body: DemoPlayer(title: 'Demo', parameter: DemoNavigatorParameter(cameraListUrl: textController1.text) ),
       );
     }));
   }

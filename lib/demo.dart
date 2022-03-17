@@ -1,11 +1,14 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:fijkplayer/fijkplayer.dart';
 import 'package:http/http.dart' as http;
+import 'package:web_socket_channel/io.dart';
 
 import 'dto/demoNavigatorParameter.dart';
+import 'model/cameraResourceModel.dart';
 import 'myFijkplayerSkin/fijkplayer_skin.dart';
 import 'myFijkplayerSkin/schema.dart' show VideoSourceFormat;
 
@@ -23,9 +26,14 @@ class DemoPlayer extends StatefulWidget {
 
 
 class _DemoPlayerState extends State<DemoPlayer> with TickerProviderStateMixin {
-  final FijkPlayer player = FijkPlayer();
+  FijkPlayer player = FijkPlayer();
+
+  final String originalCameraListUrl = "http://192.168.1.102:8080/cams";
 
   late Map<String, List<Map<String, dynamic>>> videoList;
+  late CameraList cameraList;
+  late Uri cameraListUri;
+  String autoMessageUrl = "";
 
   VideoSourceFormat? _videoSourceTabs;
 
@@ -36,66 +44,108 @@ class _DemoPlayerState extends State<DemoPlayer> with TickerProviderStateMixin {
 
   late TabController _tabController;
 
-  Timer? _autoRefreshTimer;
+  // Timer? _autoRefreshTimer;
   String autoMessage = "";
   http.Client client = http.Client();
 
+  // demo camera list
   Map<String, dynamic> demoList() {
-    var video1 = VideoItem(
-      // url: "rtsp://root:secom000@192.168.1.86:554/live1s1.sdp", name: "Cam1");
-        url: "https://download.samplelib.com/mp4/sample-30s.mp4",
-        name: "Cam1");
-    var video2 = VideoItem(
-      // url: "rtsp://root:secom000@192.168.1.86:554/live1s2.sdp", name: "Cam2");
-        url: "https://download.samplelib.com/mp4/sample-5s.mp4", name: "Cam1");
-    var videoG = VideoGroup(
-        name: "カメラ一覧", list: [video1.toJson(), video2.toJson()]);
-
-    return videoG.toJson();
+    // var video1 = VideoItem(
+    //     url: "https://download.samplelib.com/mp4/sample-30s.mp4",
+    //     name: "Cam1");
+    // var video2 = VideoItem(
+    //     url: "https://download.samplelib.com/mp4/sample-5s.mp4", name: "Cam1");
+    // var videoG = VideoGroup(
+    //     name: "カメラ一覧", list: [video1.toJson(), video2.toJson()]);
+    //
+    // return videoG.toJson();
+    return VideoGroup(
+        name: "カメラ一覧", list: []).toJson();
   }
 
-  @override
-  void initState() {
-    super.initState();
+  // init camera list
+  void initCameraList() {
+    // init with demo
+    videoList = {"video": [demoList()]};
+    var cameraListUrl = originalCameraListUrl;
 
-    if(widget.parameter != null
-        && widget.parameter?.cameraListUrl != null) {
-      try {
-        // todo camera list logic
-        // maybe future builder
-        // var response = await client.get(
-        //     Uri.parse(widget.parameter!.cameraListUrl!));
-        // still demo
-        videoList = {"video": [demoList()]};
-      }
-      finally {
-        // demo list
-        videoList = {"video": [demoList()]};
-        if (kDebugMode) {
-          print('http request failed');
-        }
-      }
+    if (widget.parameter != null
+        && widget.parameter!.cameraListUrl != null
+        && widget.parameter!.cameraListUrl!.isNotEmpty) {
+      cameraListUrl = widget.parameter!.cameraListUrl!;
     }
-    else {
+
+    try {
+      cameraListUri = Uri.parse(cameraListUrl);
+
+      client.get(cameraListUri)
+          .then((value) {
+        if (value.body.isNotEmpty) {
+          cameraList = CameraList.fromJson(jsonDecode(value.body));
+          List<Map<String, dynamic>> cameraVideoList = [];
+          for (var camera in cameraList.cams) {
+            cameraVideoList.add(VideoItem(
+                url: camera.rtspStreamUrl,
+                name: camera.name,
+                address: camera.address).toJson()
+            );
+          }
+
+          var videoG = VideoGroup(name: "カメラ一覧", list: cameraVideoList);
+
+          if (cameraList.cams.isNotEmpty) {
+            var autoMessageHostAndPort = cameraListUri.host +
+                (cameraListUri.hasPort
+                    ? ":" + cameraListUri.port.toString()
+                    : "");
+            var targetCameraId = cameraList.cams[0].camId;
+            autoMessageUrl =
+            "ws://$autoMessageHostAndPort/cams/$targetCameraId";
+            initMessageChannel(autoMessageUrl);
+
+            setState(() {
+              videoList = {"video": [videoG.toJson()]};
+              _videoSourceTabs = VideoSourceFormat.fromJson(videoList);
+
+              // switch resource
+              player.reset().then((_) async {
+                player.setDataSource(
+                    cameraList.cams[0].rtspStreamUrl, autoPlay: true);
+              });
+            });
+          }
+        }
+      }, onError: (error) {
+        if (kDebugMode) {
+          print(error);
+        }
+      });
+      // still demo
       videoList = {"video": [demoList()]};
     }
-    player.setOption(FijkOption.formatCategory, "rtsp_transport", "tcp");
-    _videoSourceTabs = VideoSourceFormat.fromJson(videoList);
+    finally {
+      if (kDebugMode) {
+        print('http request failed');
+      }
+    }
+  }
 
-    _tabController = TabController(
-      length: _videoSourceTabs!.video!.length,
-      vsync: this,
-    );
+  void initMessageChannel(String autoMessageUrl){
+    // if(_autoRefreshTimer != null){
+    //   _autoRefreshTimer?.cancel();
+    // }
 
-    speed = 1.0;
-
-    _autoRefreshTimer =
-        Timer.periodic(const Duration(seconds: 2), (timer) async {
+    // _autoRefreshTimer =
+    //     Timer.periodic(const Duration(seconds: 2), (timer) async {
           try {
-            var response = await client.get(
-                Uri.parse('https://geek-jokes.sameerkumar.website/api'));
-            setState(() {
-              autoMessage = response.body;
+            var channel = IOWebSocketChannel.connect(Uri.parse(autoMessageUrl));
+            channel.stream.listen((message) {
+              // channel.sink.add('received!');
+              // channel.sink.close(status.goingAway);
+
+              setState(() {
+                autoMessage = message;
+              });
             });
           }
           finally {
@@ -103,7 +153,26 @@ class _DemoPlayerState extends State<DemoPlayer> with TickerProviderStateMixin {
               print('http request failed');
             }
           }
-        });
+        // });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    // camera list
+    initCameraList();
+
+    // ijkplayer's setting
+    player.setOption(FijkOption.formatCategory, "rtsp_transport", "tcp");
+    _videoSourceTabs = VideoSourceFormat.fromJson(videoList);
+    speed = 1.0;
+
+    // control for camera list(not used)
+    _tabController = TabController(
+      length: _videoSourceTabs!.video!.length,
+      vsync: this,
+    );
   }
 
   @override
@@ -112,7 +181,7 @@ class _DemoPlayerState extends State<DemoPlayer> with TickerProviderStateMixin {
     player.release();
     _tabController.dispose();
 
-    _autoRefreshTimer?.cancel();
+    // _autoRefreshTimer?.cancel();
     client.close();
   }
 
@@ -201,11 +270,23 @@ class _DemoPlayerState extends State<DemoPlayer> with TickerProviderStateMixin {
                 player.setDataSource(nextVideoUrl, autoPlay: true);
               });
             },
-            child: Text(
-              _videoSourceTabs!.video![tabIdx]!.list![activeIdx]!.name!,
-              style: const TextStyle(
-                color: Colors.white,
-              ),
+            child: Column(
+              children: [
+                Text(
+                  _videoSourceTabs!.video![tabIdx]!.list![activeIdx]!.name!,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Colors.white,
+                  ),
+                ),
+                Text(
+                  _videoSourceTabs!.video![tabIdx]!.list![activeIdx]!.address!,
+                  style: const TextStyle(
+                    fontSize: 10,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
             ),
           ),
         );
@@ -252,6 +333,7 @@ class _DemoPlayerState extends State<DemoPlayer> with TickerProviderStateMixin {
                   curActiveIdx: _curActiveIdx,
                   showConfig: vCfg,
                   videoFormat: _videoSourceTabs,
+                  autoMessageUrl: autoMessageUrl,
                 );
               },
             ),
