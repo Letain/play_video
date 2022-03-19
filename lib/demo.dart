@@ -130,30 +130,30 @@ class _DemoPlayerState extends State<DemoPlayer> with TickerProviderStateMixin {
     }
   }
 
-  void initMessageChannel(String autoMessageUrl){
+  void initMessageChannel(String autoMessageUrl) {
     // if(_autoRefreshTimer != null){
     //   _autoRefreshTimer?.cancel();
     // }
 
     // _autoRefreshTimer =
     //     Timer.periodic(const Duration(seconds: 2), (timer) async {
-          try {
-            var channel = IOWebSocketChannel.connect(Uri.parse(autoMessageUrl));
-            channel.stream.listen((message) {
-              // channel.sink.add('received!');
-              // channel.sink.close(status.goingAway);
+    try {
+      var channel = IOWebSocketChannel.connect(Uri.parse(autoMessageUrl));
+      channel.stream.listen((message) {
+        // channel.sink.add('received!');
+        // channel.sink.close(status.goingAway);
 
-              setState(() {
-                autoMessage = message;
-              });
-            });
-          }
-          finally {
-            if (kDebugMode) {
-              print('http request failed');
-            }
-          }
-        // });
+        setState(() {
+          autoMessage = message;
+        });
+      });
+    }
+    finally {
+      if (kDebugMode) {
+        print('http request failed');
+      }
+    }
+    // });
   }
 
   @override
@@ -339,17 +339,18 @@ class _DemoPlayerState extends State<DemoPlayer> with TickerProviderStateMixin {
             ),
             Container(
               // alignment: Alignment.center,
-              color: Colors.grey[300],
-              height: 50,
-              width: MediaQuery
-                  .of(context)
-                  .size
-                  .width,
-              child: Text(
-                autoMessage,
-                style: const TextStyle(color: Colors.blue),
-
-              ),
+                color: Colors.grey[300],
+                height: 250,
+                width: MediaQuery
+                    .of(context)
+                    .size
+                    .width,
+                child: SingleChildScrollView(
+                  child: Text(
+                    autoMessage,
+                    style: const TextStyle(color: Colors.blue),
+                  ),
+                )
             ),
             SizedBox(
               height: 200,

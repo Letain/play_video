@@ -1658,11 +1658,12 @@ class _buildGestureDetectorState extends State<_buildGestureDetector> {
               Expanded(
                 child: Text(
                   autoMessage,
+                  maxLines: 3,
                   overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.left,
                   style: const TextStyle(
                       color: Colors.blueAccent,
-                      fontSize: 18,
+                      fontSize: 14,
                       fontWeight: FontWeight.bold
                   ),
                 ),
