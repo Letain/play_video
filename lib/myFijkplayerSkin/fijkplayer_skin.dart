@@ -64,7 +64,7 @@ class CustomFijkPanel extends StatefulWidget {
   final int curActiveIdx;
   final ShowConfigAbs showConfig;
   final VideoSourceFormat? videoFormat;
-  String autoMessageUrl;
+  final String cameraListHost;
 
   CustomFijkPanel({
     required this.player,
@@ -77,7 +77,7 @@ class CustomFijkPanel extends StatefulWidget {
     required this.videoFormat,
     required this.curTabIdx,
     required this.curActiveIdx,
-    this.autoMessageUrl = ""
+    required this.cameraListHost,
   });
 
   @override
@@ -387,6 +387,14 @@ class _CustomFijkPanelState extends State<CustomFijkPanel>
             onPressed: () {
               int newTabIdx = tabIdx;
               int newActiveIdx = activeIdx;
+
+              // switch auto message resource
+              // if (widget.cameraListHost.isNotEmpty){
+              //   var targetCameraId = "came_" + _videoSourceTabs.video![newTabIdx]!.list![newActiveIdx]!.address!;
+              //   var newAutoMessageUrl = "ws://${widget.cameraListHost}/cams/$targetCameraId";
+              //
+              // }
+
               // switch the resource
               changeCurPlayVideo(newTabIdx, newActiveIdx);
             },
@@ -637,7 +645,7 @@ class _CustomFijkPanelState extends State<CustomFijkPanel>
             videoFormat: widget.videoFormat,
             changeDrawerState: changeDrawerState,
             changeLockState: changeLockState,
-            autoMessageUrl: widget.autoMessageUrl,
+            cameraListHost: widget.cameraListHost,
           ),
         );
       }
@@ -674,7 +682,7 @@ class _buildGestureDetector extends StatefulWidget {
   final Function changeLockState;
   final ShowConfigAbs showConfig;
   final VideoSourceFormat? videoFormat;
-  String autoMessageUrl;
+  String cameraListHost;
   _buildGestureDetector({
     Key? key,
     required this.player,
@@ -689,7 +697,7 @@ class _buildGestureDetector extends StatefulWidget {
     required this.videoFormat,
     required this.changeDrawerState,
     required this.changeLockState,
-    this.autoMessageUrl = ""
+    required this.cameraListHost,
   }) : super(key: key);
 
   @override
@@ -771,7 +779,7 @@ class _buildGestureDetectorState extends State<_buildGestureDetector> {
     }
     finally {
       if (kDebugMode) {
-        print('http request failed');
+        print('initMessageChannel: ' + autoMessageUrl);
       }
     }
     // });
@@ -788,8 +796,10 @@ class _buildGestureDetectorState extends State<_buildGestureDetector> {
     _startHideTimer();
 
     // listen on web socket message
-    if(widget.autoMessageUrl != ""){
-      initMessageChannel(widget.autoMessageUrl);
+    if(widget.cameraListHost.isNotEmpty){
+      var targetCameraId = "came_" + _videoSourceTabs.video![widget.curTabIdx]!.list![widget.curActiveIdx]!.address!;
+      var autoMessageUrl = "ws://${widget.cameraListHost}/cams/$targetCameraId";
+      initMessageChannel(autoMessageUrl);
     }
   }
 
@@ -803,6 +813,9 @@ class _buildGestureDetectorState extends State<_buildGestureDetector> {
     _bufferPosSubs?.cancel();
     _bufferingSubs?.cancel();
     client.close();
+    // if(widget.cameraListHost.isNotEmpty && widget.player.value.fullScreen) {
+    //   channel.sink.close();
+    // }
   }
 
   @override

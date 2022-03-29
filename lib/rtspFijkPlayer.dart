@@ -119,6 +119,7 @@ class _RtspFijkPlayerState extends State<RtspFijkPlayer> {
                   curTabIdx: _curTabIdx,
                   curActiveIdx: _curActiveIdx,
                   showConfig: vCfg,
+                  cameraListHost: "",
                   videoFormat: _videoSourceTabs,
                 );
               },

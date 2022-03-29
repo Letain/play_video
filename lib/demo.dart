@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:fijkplayer/fijkplayer.dart';
 import 'package:http/http.dart' as http;
 import 'package:web_socket_channel/io.dart';
+import 'package:web_socket_channel/status.dart' as status;
 
 import 'dto/demoNavigatorParameter.dart';
 import 'model/cameraResourceModel.dart';
@@ -33,7 +34,9 @@ class _DemoPlayerState extends State<DemoPlayer> with TickerProviderStateMixin {
   late Map<String, List<Map<String, dynamic>>> videoList;
   late CameraList cameraList;
   late Uri cameraListUri;
+  String cameraListHost = "";
   String autoMessageUrl = "";
+  late IOWebSocketChannel channel;
 
   VideoSourceFormat? _videoSourceTabs;
 
@@ -77,6 +80,10 @@ class _DemoPlayerState extends State<DemoPlayer> with TickerProviderStateMixin {
 
     try {
       cameraListUri = Uri.parse(cameraListUrl);
+      cameraListHost = cameraListUri.host +
+          (cameraListUri.hasPort
+              ? ":" + cameraListUri.port.toString()
+              : "");
 
       client.get(cameraListUri)
           .then((value) {
@@ -94,13 +101,9 @@ class _DemoPlayerState extends State<DemoPlayer> with TickerProviderStateMixin {
           var videoG = VideoGroup(name: "カメラ一覧", list: cameraVideoList);
 
           if (cameraList.cams.isNotEmpty) {
-            var autoMessageHostAndPort = cameraListUri.host +
-                (cameraListUri.hasPort
-                    ? ":" + cameraListUri.port.toString()
-                    : "");
-            var targetCameraId = cameraList.cams[0].camId;
+            var targetCameraId = cameraList.cams[_curActiveIdx].camId;
             autoMessageUrl =
-            "ws://$autoMessageHostAndPort/cams/$targetCameraId";
+            "ws://$cameraListHost/cams/$targetCameraId";
             initMessageChannel(autoMessageUrl);
 
             setState(() {
@@ -110,7 +113,7 @@ class _DemoPlayerState extends State<DemoPlayer> with TickerProviderStateMixin {
               // switch resource
               player.reset().then((_) async {
                 player.setDataSource(
-                    cameraList.cams[0].rtspStreamUrl, autoPlay: true);
+                    cameraList.cams[_curActiveIdx].rtspStreamUrl, autoPlay: true);
               });
             });
           }
@@ -131,18 +134,12 @@ class _DemoPlayerState extends State<DemoPlayer> with TickerProviderStateMixin {
   }
 
   void initMessageChannel(String autoMessageUrl) {
-    // if(_autoRefreshTimer != null){
-    //   _autoRefreshTimer?.cancel();
-    // }
-
-    // _autoRefreshTimer =
-    //     Timer.periodic(const Duration(seconds: 2), (timer) async {
     try {
-      var channel = IOWebSocketChannel.connect(Uri.parse(autoMessageUrl));
+      setState(() {
+        autoMessage = "";
+      });
+      channel = IOWebSocketChannel.connect(Uri.parse(autoMessageUrl));
       channel.stream.listen((message) {
-        // channel.sink.add('received!');
-        // channel.sink.close(status.goingAway);
-
         setState(() {
           autoMessage = message;
         });
@@ -150,10 +147,9 @@ class _DemoPlayerState extends State<DemoPlayer> with TickerProviderStateMixin {
     }
     finally {
       if (kDebugMode) {
-        print('http request failed');
+        print('initMessageChannel');
       }
     }
-    // });
   }
 
   @override
@@ -183,6 +179,7 @@ class _DemoPlayerState extends State<DemoPlayer> with TickerProviderStateMixin {
 
     // _autoRefreshTimer?.cancel();
     client.close();
+    channel.sink.close(status.goingAway);
   }
 
   void onChangeVideo(int curTabIdx, int curActiveIdx) {
@@ -262,6 +259,14 @@ class _DemoPlayerState extends State<DemoPlayer> with TickerProviderStateMixin {
               });
               String nextVideoUrl =
               _videoSourceTabs!.video![tabIdx]!.list![activeIdx]!.url!;
+
+              // socket message update
+              var targetCameraId = cameraList.cams[_curActiveIdx].camId;
+              autoMessageUrl =
+              "ws://$cameraListHost/cams/$targetCameraId";
+              channel.sink.close(status.goingAway);
+              initMessageChannel(autoMessageUrl);
+
               // switch resource
               if (player.value.state == FijkState.completed) {
                 await player.stop();
@@ -333,7 +338,7 @@ class _DemoPlayerState extends State<DemoPlayer> with TickerProviderStateMixin {
                   curActiveIdx: _curActiveIdx,
                   showConfig: vCfg,
                   videoFormat: _videoSourceTabs,
-                  autoMessageUrl: autoMessageUrl,
+                  cameraListHost: cameraListHost,
                 );
               },
             ),

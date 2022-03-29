@@ -159,6 +159,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   curTabIdx: _curTabIdx,
                   curActiveIdx: _curActiveIdx,
                   showConfig: vCfg,
+                  cameraListHost: "",
                   videoFormat: _videoSourceTabs,
                 );
               },
