@@ -65,6 +65,7 @@ class CustomFijkPanel extends StatefulWidget {
   final ShowConfigAbs showConfig;
   final VideoSourceFormat? videoFormat;
   final String cameraListHost;
+  final Function? onFullScreen;
 
   CustomFijkPanel({
     required this.player,
@@ -78,6 +79,7 @@ class CustomFijkPanel extends StatefulWidget {
     required this.curTabIdx,
     required this.curActiveIdx,
     required this.cameraListHost,
+    this.onFullScreen
   });
 
   @override
@@ -646,6 +648,7 @@ class _CustomFijkPanelState extends State<CustomFijkPanel>
             changeDrawerState: changeDrawerState,
             changeLockState: changeLockState,
             cameraListHost: widget.cameraListHost,
+            onFullScreen: widget.onFullScreen,
           ),
         );
       }
@@ -682,7 +685,8 @@ class _buildGestureDetector extends StatefulWidget {
   final Function changeLockState;
   final ShowConfigAbs showConfig;
   final VideoSourceFormat? videoFormat;
-  String cameraListHost;
+  final String cameraListHost;
+  final Function? onFullScreen;
   _buildGestureDetector({
     Key? key,
     required this.player,
@@ -698,6 +702,7 @@ class _buildGestureDetector extends StatefulWidget {
     required this.changeDrawerState,
     required this.changeLockState,
     required this.cameraListHost,
+    this.onFullScreen
   }) : super(key: key);
 
   @override
@@ -761,14 +766,16 @@ class _buildGestureDetectorState extends State<_buildGestureDetector> {
   String autoMessage = "";
   http.Client client =  http.Client();
 
+  IOWebSocketChannel? channel;
+
   // constructor
   _buildGestureDetectorState();
 
   void initMessageChannel(String autoMessageUrl){
     try {
       if (widget.player.value.fullScreen) {
-        var channel = IOWebSocketChannel.connect(Uri.parse(autoMessageUrl));
-        channel.stream.listen((message) {
+        channel = IOWebSocketChannel.connect(Uri.parse(autoMessageUrl));
+        channel?.stream.listen((message) {
           if (widget.player.value.fullScreen && _hideStuff) {
             setState(() {
               autoMessage = message;
@@ -785,6 +792,24 @@ class _buildGestureDetectorState extends State<_buildGestureDetector> {
     // });
   }
 
+  void initChannel(){
+    if(widget.cameraListHost.isNotEmpty){
+      var targetCameraId = "came_" + _videoSourceTabs.video![widget.curTabIdx]!.list![widget.curActiveIdx]!.address!;
+      var autoMessageUrl = "ws://${widget.cameraListHost}/cams/$targetCameraId";
+      initMessageChannel(autoMessageUrl);
+    }
+  }
+
+  void onFullScreen(bool isFullScreen){
+    if(isFullScreen){
+      widget.onFullScreen!(true);
+      initChannel();
+    }else{
+      channel?.sink.close();
+      widget.onFullScreen!(false);
+    }
+  }
+
   void initEvent() {
     // init, will execute when enter or quit full screen
     setState(() {
@@ -794,13 +819,6 @@ class _buildGestureDetectorState extends State<_buildGestureDetector> {
     });
     // timer for hiding the other parts beyond the video screen
     _startHideTimer();
-
-    // listen on web socket message
-    if(widget.cameraListHost.isNotEmpty){
-      var targetCameraId = "came_" + _videoSourceTabs.video![widget.curTabIdx]!.list![widget.curActiveIdx]!.address!;
-      var autoMessageUrl = "ws://${widget.cameraListHost}/cams/$targetCameraId";
-      initMessageChannel(autoMessageUrl);
-    }
   }
 
   @override
@@ -813,9 +831,7 @@ class _buildGestureDetectorState extends State<_buildGestureDetector> {
     _bufferPosSubs?.cancel();
     _bufferingSubs?.cancel();
     client.close();
-    // if(widget.cameraListHost.isNotEmpty && widget.player.value.fullScreen) {
-    //   channel.sink.close();
-    // }
+    channel?.sink.close();
   }
 
   @override
@@ -854,6 +870,9 @@ class _buildGestureDetectorState extends State<_buildGestureDetector> {
         _buffering = v;
       });
     });
+
+    // listen on web socket message
+    initChannel();
   }
 
   void _playerValueChanged() async {
@@ -1299,10 +1318,14 @@ class _buildGestureDetectorState extends State<_buildGestureDetector> {
                           () {
                         if (widget.player.value.fullScreen) {
                           player.exitFullScreen();
+
+                          onFullScreen(false);
                         } else {
                           player.enterFullScreen();
                           // call the parent widget's callback
                           widget.changeDrawerState(false);
+
+                          onFullScreen(true);
                         }
                       },
                     ),
@@ -1353,6 +1376,7 @@ class _buildGestureDetectorState extends State<_buildGestureDetector> {
         // if it is fullscreen
         if (widget.player.value.fullScreen) {
           player.exitFullScreen();
+          onFullScreen(false);
         } else {
           if (widget.pageContent == null) return;
           player.stop();

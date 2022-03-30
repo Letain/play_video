@@ -36,7 +36,7 @@ class _DemoPlayerState extends State<DemoPlayer> with TickerProviderStateMixin {
   late Uri cameraListUri;
   String cameraListHost = "";
   String autoMessageUrl = "";
-  late IOWebSocketChannel channel;
+  IOWebSocketChannel? channel;
 
   VideoSourceFormat? _videoSourceTabs;
 
@@ -101,10 +101,7 @@ class _DemoPlayerState extends State<DemoPlayer> with TickerProviderStateMixin {
           var videoG = VideoGroup(name: "カメラ一覧", list: cameraVideoList);
 
           if (cameraList.cams.isNotEmpty) {
-            var targetCameraId = cameraList.cams[_curActiveIdx].camId;
-            autoMessageUrl =
-            "ws://$cameraListHost/cams/$targetCameraId";
-            initMessageChannel(autoMessageUrl);
+            switchChannel();
 
             setState(() {
               videoList = {"video": [videoG.toJson()]};
@@ -139,7 +136,7 @@ class _DemoPlayerState extends State<DemoPlayer> with TickerProviderStateMixin {
         autoMessage = "";
       });
       channel = IOWebSocketChannel.connect(Uri.parse(autoMessageUrl));
-      channel.stream.listen((message) {
+      channel?.stream.listen((message) {
         setState(() {
           autoMessage = message;
         });
@@ -179,7 +176,7 @@ class _DemoPlayerState extends State<DemoPlayer> with TickerProviderStateMixin {
 
     // _autoRefreshTimer?.cancel();
     client.close();
-    channel.sink.close(status.goingAway);
+    channel?.sink.close(status.goingAway);
   }
 
   void onChangeVideo(int curTabIdx, int curActiveIdx) {
@@ -187,6 +184,23 @@ class _DemoPlayerState extends State<DemoPlayer> with TickerProviderStateMixin {
       _curTabIdx = curTabIdx;
       _curActiveIdx = curActiveIdx;
     });
+  }
+
+  void onFullScreen(bool isFullScreen) {
+    if(isFullScreen){
+      channel?.sink.close(status.goingAway);
+    }
+    else {
+      switchChannel();
+    }
+  }
+
+  void switchChannel() {
+    var targetCameraId = cameraList.cams[_curActiveIdx].camId;
+    autoMessageUrl =
+    "ws://$cameraListHost/cams/$targetCameraId";
+    channel?.sink.close(status.goingAway);
+    initMessageChannel(autoMessageUrl);
   }
 
   // build
@@ -261,11 +275,7 @@ class _DemoPlayerState extends State<DemoPlayer> with TickerProviderStateMixin {
               _videoSourceTabs!.video![tabIdx]!.list![activeIdx]!.url!;
 
               // socket message update
-              var targetCameraId = cameraList.cams[_curActiveIdx].camId;
-              autoMessageUrl =
-              "ws://$cameraListHost/cams/$targetCameraId";
-              channel.sink.close(status.goingAway);
-              initMessageChannel(autoMessageUrl);
+              switchChannel();
 
               // switch resource
               if (player.value.state == FijkState.completed) {
@@ -339,6 +349,7 @@ class _DemoPlayerState extends State<DemoPlayer> with TickerProviderStateMixin {
                   showConfig: vCfg,
                   videoFormat: _videoSourceTabs,
                   cameraListHost: cameraListHost,
+                  onFullScreen: onFullScreen,
                 );
               },
             ),
